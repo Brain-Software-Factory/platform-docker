@@ -1,0 +1,68 @@
+# platform-docker — Stack de despliegue (single-host, sin Swarm)
+#
+# Este compose NO buildea — sólo PULL desde Docker Hub.
+# Para deploy en Swarm con Traefik usá stack.yml.
+#
+# Flujo en el VPS del cliente:
+#   1. cp .env.example .env  &&  editá valores reales
+#   2. ./install.sh           (primera vez)
+#   3. Para actualizar:
+#        - editá IMAGE_BACKEND_TAG / IMAGE_FRONTEND_TAG en .env
+#        - ./update.sh
+#
+# El template NO crea su propio postgres — apunta a uno externo (DATABASE_URL).
+
+services:
+  backend:
+    image: ${IMAGE_BACKEND_TAG}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      BACKEND_PORT: 3000
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      # db push opt-in. En producción con DB compartida: dejarlo en false.
+      # En primer arranque sobre DB vacía: ponelo en true SOLO esa vez.
+      RUN_DB_PUSH: ${RUN_DB_PUSH:-false}
+      APP_NAME: ${APP_NAME}
+      APP_LOGO_URL: ${APP_LOGO_URL}
+      APP_PRIMARY_COLOR: ${APP_PRIMARY_COLOR}
+      # Integraciones (opcionales — dejá vacío para desactivar)
+      METABASE_SITE_URL: ${METABASE_SITE_URL:-}
+      METABASE_EMBED_SECRET: ${METABASE_EMBED_SECRET:-}
+      METABASE_DEFAULT_DASHBOARD_ID: ${METABASE_DEFAULT_DASHBOARD_ID:-}
+      CHATWOOT_PUBLIC_URL: ${CHATWOOT_PUBLIC_URL:-}
+      CHATWOOT_INTERNAL_URL: ${CHATWOOT_INTERNAL_URL:-}
+      CHATWOOT_PLATFORM_TOKEN: ${CHATWOOT_PLATFORM_TOKEN:-}
+      NOCODB_PUBLIC_URL: ${NOCODB_PUBLIC_URL:-}
+      NOCODB_API_TOKEN: ${NOCODB_API_TOKEN:-}
+      N8N_PUBLIC_URL: ${N8N_PUBLIC_URL:-}
+      # Seed admin (idempotente — sólo crea si no existe)
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Administrador}
+    networks:
+      - default
+      # Si tu postgres / chatwoot viven en otra red docker, descomentá:
+      # - external_net
+
+  frontend:
+    image: ${IMAGE_FRONTEND_TAG}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+    networks:
+      - default
+      # - external_net
+
+networks:
+  default:
+    name: platform-net
+  # Descomentá si el postgres o chatwoot del cliente vive en otra red docker.
+  # external_net:
+  #   external: true
+  #   name: ${EXTERNAL_NETWORK:-shared-net}

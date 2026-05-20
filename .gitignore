@@ -1,0 +1,14 @@
+# Secretos y config del cliente — NUNCA commitear
+.env
+.env.local
+.env.*.local
+
+# Logs y backups
+*.log
+*.bak
+*.backup
+
+# Editores
+.DS_Store
+.vscode
+.idea

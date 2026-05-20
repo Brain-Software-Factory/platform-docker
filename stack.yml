@@ -1,0 +1,78 @@
+# platform-docker — Docker Swarm stack (con Traefik)
+#
+# Para deploy en Swarm + Traefik. Si solo querés docker compose simple, ver docker-compose.yml.
+#
+# El template NO crea postgres propio — conectamos al postgres del cliente vía DATABASE_URL.
+#
+# Variables Swarm-específicas en .env:
+#   EXTERNAL_NETWORK     red overlay externa donde viven postgres + chatwoot + traefik del cliente
+#   PUBLIC_HOST          dominio público (ej: platform.cliente.com)
+#   IMAGE_BACKEND_TAG    ej: javierrodriguez4/platform-backend:0.3.1
+#   IMAGE_FRONTEND_TAG   ej: javierrodriguez4/platform-frontend:0.6.0
+#
+# Deploy:
+#   set -a && source .env && set +a
+#   docker stack deploy -c stack.yml platform
+
+services:
+  backend:
+    image: ${IMAGE_BACKEND_TAG}
+    environment:
+      NODE_ENV: production
+      BACKEND_PORT: 3000
+      CORS_ORIGIN: https://${PUBLIC_HOST}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      RUN_DB_PUSH: ${RUN_DB_PUSH:-false}
+      APP_NAME: ${APP_NAME}
+      APP_LOGO_URL: ${APP_LOGO_URL}
+      APP_PRIMARY_COLOR: ${APP_PRIMARY_COLOR}
+      METABASE_SITE_URL: ${METABASE_SITE_URL:-}
+      METABASE_EMBED_SECRET: ${METABASE_EMBED_SECRET:-}
+      METABASE_DEFAULT_DASHBOARD_ID: ${METABASE_DEFAULT_DASHBOARD_ID:-}
+      CHATWOOT_PUBLIC_URL: ${CHATWOOT_PUBLIC_URL:-}
+      CHATWOOT_INTERNAL_URL: ${CHATWOOT_INTERNAL_URL:-}
+      CHATWOOT_PLATFORM_TOKEN: ${CHATWOOT_PLATFORM_TOKEN:-}
+      NOCODB_PUBLIC_URL: ${NOCODB_PUBLIC_URL:-}
+      NOCODB_API_TOKEN: ${NOCODB_API_TOKEN:-}
+      N8N_PUBLIC_URL: ${N8N_PUBLIC_URL:-}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Administrador}
+    networks:
+      - external_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 512M
+
+  frontend:
+    image: ${IMAGE_FRONTEND_TAG}
+    networks:
+      - external_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 128M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=${EXTERNAL_NETWORK}"
+        - "traefik.http.routers.platform.entrypoints=websecure"
+        - "traefik.http.routers.platform.rule=Host(`${PUBLIC_HOST}`)"
+        - "traefik.http.routers.platform.tls=true"
+        - "traefik.http.routers.platform.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.platform.loadbalancer.passHostHeader=1"
+        - "traefik.http.services.platform.loadbalancer.server.port=80"
+
+networks:
+  # Red overlay externa del cliente, donde ya viven postgres, chatwoot, traefik, etc.
+  external_net:
+    external: true
+    name: ${EXTERNAL_NETWORK}
