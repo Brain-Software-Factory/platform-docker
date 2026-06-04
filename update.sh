@@ -2,12 +2,17 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # update.sh — Actualizar versión de la plataforma en el VPS del cliente
 #
-# Flujo típico:
+# Uso manual (interactivo):
 #   1. Editás .env y cambiás IMAGE_BACKEND_TAG / IMAGE_FRONTEND_TAG
-#      con las nuevas versiones publicadas en Docker Hub.
-#   2. Corrés:
-#        ./update.sh                  → docker compose (single-host)
-#        ./update.sh --stack          → swarm (stack.yml)
+#   2. ./update.sh                  → docker compose (single-host)
+#      ./update.sh --stack          → swarm (stack.yml)
+#
+# Uso automatizado (CI/CD por SSH, no-interactivo):
+#   ./update.sh -y \
+#     --backend-tag  user/platform-backend:0.21.0 \
+#     --frontend-tag user/platform-frontend:0.21.0 \
+#     [--stack]
+#   Los tags pasados por flag se PERSISTEN en .env (queda como fuente de verdad).
 #
 # Lo que hace:
 #   - pull de las nuevas imágenes
@@ -31,17 +36,48 @@ print_warn()   { echo "${C_WARN}!${C_RESET} $1"; }
 print_err()    { echo "${C_ERR}✗${C_RESET} $1" >&2; }
 print_info()   { echo "${C_INFO}▸${C_RESET} $1"; }
 
+# ─── Persistir un par KEY=VALUE en .env sin sed/awk ─────────────────────────
+set_env_var() {
+  local key="$1" val="$2" file=".env" tmp found=0 line
+  tmp="$(mktemp)"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" == "${key}="* ]]; then
+      printf '%s=%s\n' "$key" "$val" >> "$tmp"; found=1
+    else
+      printf '%s\n' "$line" >> "$tmp"
+    fi
+  done < "$file"
+  (( found == 0 )) && printf '%s=%s\n' "$key" "$val" >> "$tmp"
+  mv "$tmp" "$file"
+}
+
+# ─── Parseo de flags ────────────────────────────────────────────────────────
 MODE="compose"
-if [[ "${1:-}" == "--stack" || "${1:-}" == "swarm" ]]; then
-  MODE="swarm"
-fi
+ASSUME_YES=0
+OVERRIDE_BACKEND_TAG=""
+OVERRIDE_FRONTEND_TAG=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --stack|swarm)   MODE="swarm" ;;
+    -y|--yes)        ASSUME_YES=1 ;;
+    --backend-tag)   OVERRIDE_BACKEND_TAG="${2:?--backend-tag requiere valor}"; shift ;;
+    --frontend-tag)  OVERRIDE_FRONTEND_TAG="${2:?--frontend-tag requiere valor}"; shift ;;
+    *)               print_err "Flag desconocido: $1"; exit 1 ;;
+  esac
+  shift
+done
 
 if [[ ! -f .env ]]; then
   print_err ".env no existe. Corré ./install.sh primero."
   exit 1
 fi
 
-# ─── Leer versiones nuevas del .env ────────────────────────────────────────
+# ─── Override de tags (CI) → persistir en .env ──────────────────────────────
+[[ -n "$OVERRIDE_BACKEND_TAG" ]]  && set_env_var IMAGE_BACKEND_TAG  "$OVERRIDE_BACKEND_TAG"
+[[ -n "$OVERRIDE_FRONTEND_TAG" ]] && set_env_var IMAGE_FRONTEND_TAG "$OVERRIDE_FRONTEND_TAG"
+
+# ─── Leer versiones del .env ────────────────────────────────────────────────
 set -a
 # shellcheck disable=SC1091
 source .env
@@ -55,10 +91,13 @@ print_info "Backend  → ${IMAGE_BACKEND_TAG}"
 print_info "Frontend → ${IMAGE_FRONTEND_TAG}"
 echo
 
-read -r -p "¿Confirmás el update? [y/N]: " confirm
-if [[ ! "$confirm" =~ ^[yY]$ ]]; then
-  echo "Cancelado."
-  exit 0
+# ─── Confirmación (se saltea con -y para CI) ────────────────────────────────
+if (( ASSUME_YES == 0 )); then
+  read -r -p "¿Confirmás el update? [y/N]: " confirm
+  if [[ ! "$confirm" =~ ^[yY]$ ]]; then
+    echo "Cancelado."
+    exit 0
+  fi
 fi
 
 # ─── Pull ───────────────────────────────────────────────────────────────────
@@ -76,7 +115,7 @@ if [[ "$MODE" == "swarm" ]]; then
   echo "Estado: docker stack services platform"
 else
   print_header "Recreate containers"
-  # --pull always por si tag mutó (ej. :latest) — barato si no cambió.
+  # --pull always por si tag mutó (ej. :latest/:dev) — barato si no cambió.
   docker compose up -d --pull always
   print_ok "containers actualizados"
 

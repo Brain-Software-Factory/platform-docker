@@ -26,20 +26,43 @@ services:
       # db push opt-in. En producción con DB compartida: dejarlo en false.
       # En primer arranque sobre DB vacía: ponelo en true SOLO esa vez.
       RUN_DB_PUSH: ${RUN_DB_PUSH:-false}
-      APP_NAME: ${APP_NAME}
-      APP_LOGO_URL: ${APP_LOGO_URL}
-      APP_PRIMARY_COLOR: ${APP_PRIMARY_COLOR}
-      # Integraciones (opcionales — dejá vacío para desactivar)
+      # ── Auth ──────────────────────────────────────────────────────────────
+      AUTH_LOCAL_ENABLED: ${AUTH_LOCAL_ENABLED:-true}
+      BOT_SERVICE_KEY: ${BOT_SERVICE_KEY:-}
+      # ── OIDC / Keycloak (off por defecto) ─────────────────────────────────
+      OIDC_ENABLED: ${OIDC_ENABLED:-false}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_INTERNAL_ISSUER: ${OIDC_INTERNAL_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
+      OIDC_POST_LOGIN_REDIRECT: ${OIDC_POST_LOGIN_REDIRECT:-/oidc/callback}
+      OIDC_POST_LOGOUT_REDIRECT: ${OIDC_POST_LOGOUT_REDIRECT:-}
+      OIDC_ROLE_ADMIN: ${OIDC_ROLE_ADMIN:-platform-admin}
+      OIDC_DEFAULT_ROLE_CODE: ${OIDC_DEFAULT_ROLE_CODE:-user}
+      # ── Keycloak Admin API (ABM de usuarios) ──────────────────────────────
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-}
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-}
+      # ── Integraciones (opcionales — dejá vacío para desactivar) ──────────
       METABASE_SITE_URL: ${METABASE_SITE_URL:-}
       METABASE_EMBED_SECRET: ${METABASE_EMBED_SECRET:-}
       METABASE_DEFAULT_DASHBOARD_ID: ${METABASE_DEFAULT_DASHBOARD_ID:-}
       CHATWOOT_PUBLIC_URL: ${CHATWOOT_PUBLIC_URL:-}
       CHATWOOT_INTERNAL_URL: ${CHATWOOT_INTERNAL_URL:-}
       CHATWOOT_PLATFORM_TOKEN: ${CHATWOOT_PLATFORM_TOKEN:-}
+      CHATWOOT_ACCOUNT_ID: ${CHATWOOT_ACCOUNT_ID:-1}
+      CHATWOOT_ADMIN_USER_TOKEN: ${CHATWOOT_ADMIN_USER_TOKEN:-}
+      CHATWOOT_DEFAULT_INBOX_IDS: ${CHATWOOT_DEFAULT_INBOX_IDS:-}
+      CHATWOOT_ROLE_FOR_PLATFORM_ADMIN: ${CHATWOOT_ROLE_FOR_PLATFORM_ADMIN:-administrator}
+      CHATWOOT_ROLE_FOR_PLATFORM_USER: ${CHATWOOT_ROLE_FOR_PLATFORM_USER:-agent}
       NOCODB_PUBLIC_URL: ${NOCODB_PUBLIC_URL:-}
-      NOCODB_API_TOKEN: ${NOCODB_API_TOKEN:-}
       N8N_PUBLIC_URL: ${N8N_PUBLIC_URL:-}
-      # Seed admin (idempotente — sólo crea si no existe)
+      N8N_INTERNAL_URL: ${N8N_INTERNAL_URL:-}
+      N8N_API_KEY: ${N8N_API_KEY:-}
+      EVOLUTION_BASE_URL: ${EVOLUTION_BASE_URL:-}
+      EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-}
+      EVOLUTION_INSTANCE_TOKEN: ${EVOLUTION_INSTANCE_TOKEN:-}
+      # ── Seed admin (idempotente — sólo crea si no existe) ─────────────────
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
       SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Administrador}

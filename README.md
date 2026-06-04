@@ -121,11 +121,18 @@ curl http://localhost:8080/api/ready      # readiness — DB + integraciones
 | `CORS_ORIGIN` | Igual al PUBLIC_HOST con `https://` |
 | `FRONTEND_PORT` | Puerto local (sólo single-host) |
 | `EXTERNAL_NETWORK` | Red overlay del cliente (Swarm) |
-| `APP_NAME` / `APP_LOGO_URL` / `APP_PRIMARY_COLOR` | Branding |
 | `SEED_ADMIN_*` | Usuario admin inicial (idempotente) |
-| `METABASE_*` / `CHATWOOT_*` / `NOCODB_*` / `N8N_*` | Integraciones — vacío = desactivado |
+| `AUTH_LOCAL_ENABLED` | `false` para forzar solo OIDC/Keycloak |
+| `OIDC_ENABLED` + `OIDC_*` | SSO con Keycloak — `false` por defecto |
+| `KEYCLOAK_ADMIN_CLIENT_ID/SECRET` | ABM de usuarios Keycloak desde Platform |
+| `METABASE_*` | Embedded analytics — vacío = desactivado |
+| `CHATWOOT_*` | SSO + agentes Chatwoot — vacío = desactivado |
+| `EVOLUTION_*` | Gateway WhatsApp — vacío = desactivado |
+| `N8N_*` | Automatizaciones n8n — vacío = desactivado |
+| `NOCODB_PUBLIC_URL` | Shared views NocoDB — vacío = desactivado |
+| `BOT_SERVICE_KEY` | Clave para el endpoint `/api/bot` — vacío = 503 |
 
-Ver `.env.example` para el archivo completo con comentarios.
+Ver `.env.example` para el archivo completo con comentarios y valores de ejemplo.
 
 ---
 
