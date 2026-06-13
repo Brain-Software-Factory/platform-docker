@@ -21,6 +21,9 @@ services:
       NODE_ENV: production
       BACKEND_PORT: 3000
       CORS_ORIGIN: https://${PUBLIC_HOST}
+      # URL pública de la instancia: la usan rebook_url (notify_cancellation) y la
+      # URL corta /c/{token} "agregar a mi calendario". Se deriva de PUBLIC_HOST.
+      PLATFORM_PUBLIC_URL: https://${PUBLIC_HOST}
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}

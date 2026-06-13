@@ -20,6 +20,9 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       BACKEND_PORT: 3000
       CORS_ORIGIN: ${CORS_ORIGIN}
+      # URL pública de la instancia: la usan rebook_url (notify_cancellation) y la
+      # URL corta /c/{token} "agregar a mi calendario". Vacío = features inertes.
+      PLATFORM_PUBLIC_URL: ${PLATFORM_PUBLIC_URL:-}
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
