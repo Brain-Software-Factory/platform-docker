@@ -58,6 +58,14 @@ services:
       CHATWOOT_ROLE_FOR_PLATFORM_ADMIN: ${CHATWOOT_ROLE_FOR_PLATFORM_ADMIN:-administrator}
       CHATWOOT_ROLE_FOR_PLATFORM_USER: ${CHATWOOT_ROLE_FOR_PLATFORM_USER:-agent}
       NOCODB_PUBLIC_URL: ${NOCODB_PUBLIC_URL:-}
+      # ── Object storage (MinIO/S3): uploads de logo (branding) y documentos de
+      # pacientes. Si S3_ENDPOINT está vacío, los uploads responden 503. ──
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      S3_BUCKET: ${S3_BUCKET:-platform-assets}
       N8N_PUBLIC_URL: ${N8N_PUBLIC_URL:-}
       N8N_INTERNAL_URL: ${N8N_INTERNAL_URL:-}
       N8N_API_KEY: ${N8N_API_KEY:-}
